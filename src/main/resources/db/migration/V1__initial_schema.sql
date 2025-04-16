@@ -39,6 +39,7 @@ CREATE TABLE users
     name       VARCHAR(100),
     email      VARCHAR(100),
     password   VARCHAR(100),
+    role       VARCHAR(255)                            NOT NULL,
     created_at TIMESTAMP WITHOUT TIME ZONE,
     updated_at TIMESTAMP WITHOUT TIME ZONE,
     CONSTRAINT pk_users PRIMARY KEY (id)

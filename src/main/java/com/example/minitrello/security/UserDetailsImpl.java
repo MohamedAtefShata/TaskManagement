@@ -34,7 +34,7 @@ public class UserDetailsImpl implements UserDetails {
                 .name(user.getName())
                 .email(user.getEmail())
                 .password(user.getPassword())
-                .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")))
+                .authorities(Collections.singletonList(new SimpleGrantedAuthority(user.getRole().name())))
                 .build();
     }
 

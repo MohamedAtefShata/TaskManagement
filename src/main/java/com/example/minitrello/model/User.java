@@ -41,6 +41,11 @@ public class User {
     @Size(max = 100)
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    @Builder.Default
+    private Role role = Role.ROLE_USER;
+
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<Project> projects = new HashSet<>();
