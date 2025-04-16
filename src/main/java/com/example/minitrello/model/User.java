@@ -46,6 +46,10 @@ public class User {
     @Builder.Default
     private Role role = Role.ROLE_USER;
 
+    @Builder.Default
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<Project> projects = new HashSet<>();
