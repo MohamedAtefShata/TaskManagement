@@ -29,7 +29,7 @@ public class TaskList {
     @Size(max = 100)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false,name = "position")
     private Integer position;
 
     @ManyToOne(fetch = FetchType.LAZY)

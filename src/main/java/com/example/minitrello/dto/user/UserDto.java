@@ -50,13 +50,6 @@ public class UserDto {
     private LocalDateTime updatedAt;
 
     /**
-     * Number of projects owned by this user.
-     * Only included in responses, not in requests.
-     */
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private Integer projectCount;
-
-    /**
      * Number of tasks assigned to this user.
      * Only included in responses, not in requests.
      */

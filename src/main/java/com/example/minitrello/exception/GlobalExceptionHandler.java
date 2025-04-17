@@ -2,6 +2,7 @@ package com.example.minitrello.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -94,11 +96,12 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiErrorResponse> handleGenericException(
-            HttpServletRequest request) {
-        return buildErrorResponse("An unexpected error occurred", request, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<ApiErrorResponse> handleGenericException(
+//            Exception ex,HttpServletRequest request) {
+//
+//        return buildErrorResponse("An unexpected error occurred", request, HttpStatus.INTERNAL_SERVER_ERROR);
+//    }
 
     /**
      * Helper method to build a standardized error response

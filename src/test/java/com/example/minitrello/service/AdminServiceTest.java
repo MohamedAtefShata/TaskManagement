@@ -145,7 +145,6 @@ public class AdminServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
         List<User> users = List.of(regularUser, adminUser);
         Page<User> userPage = new PageImpl<>(users, pageable, users.size());
-        Page<UserDto> dtoPage = new PageImpl<>(List.of(regularUserDto, adminUserDto), pageable, 2);
 
         when(userRepository.findAll(pageable)).thenReturn(userPage);
         when(userService.toDto(regularUser)).thenReturn(regularUserDto);

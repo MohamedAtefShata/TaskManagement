@@ -163,10 +163,28 @@ public class AuthServiceTest {
         // Arrange
         String jwtToken = "test.jwt.token";
 
+        // Expected login response that will be returned by the mapper
+        LoginResponse expectedResponse = LoginResponse.builder()
+                .id(1L)
+                .name("Test User")
+                .email("test@example.com")
+                .token(jwtToken)
+                .tokenType("Bearer")
+                .role(Role.ROLE_USER)
+                .build();
+
+        // Configure authentication to use our mocked authentication object
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
+
+        // Set userDetails as the principal returned by authentication
         when(authentication.getPrincipal()).thenReturn(userDetails);
+
+        // Configure JWT generation
         when(jwtUtils.generateToken(authentication)).thenReturn(jwtToken);
+
+        // Configure the mapper to return our expected response
+        when(userMapper.toLoginResponse(userDetails, jwtToken)).thenReturn(expectedResponse);
 
         // Act
         LoginResponse response = authService.authenticateUser(loginRequest);
@@ -178,8 +196,10 @@ public class AuthServiceTest {
         assertThat(response.getName()).isEqualTo(testUser.getName());
         assertThat(response.getTokenType()).isEqualTo("Bearer");
 
-        verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(jwtUtils, times(1)).generateToken(authentication);
+        // Verify interactions
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(jwtUtils).generateToken(authentication);
+        verify(userMapper).toLoginResponse(userDetails, jwtToken);
     }
 
     @Test

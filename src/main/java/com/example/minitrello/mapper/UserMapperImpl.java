@@ -7,8 +7,9 @@ import com.example.minitrello.dto.user.UserUpdateDto;
 import com.example.minitrello.model.Role;
 import com.example.minitrello.model.User;
 import com.example.minitrello.security.UserDetailsImpl;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
 
 /**
  * Manual implementation of UserMapper.
@@ -32,7 +33,6 @@ public class UserMapperImpl implements UserMapper {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .isActive(user.getIsActive())
-                .projectCount(user.getProjects() != null ? user.getProjects().size() : 0)
                 .assignedTaskCount(user.getAssignedTasks() != null ? user.getAssignedTasks().size() : 0)
                 .build();
     }

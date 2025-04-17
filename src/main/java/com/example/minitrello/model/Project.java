@@ -11,8 +11,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "projects")
@@ -36,14 +36,52 @@ public class Project {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
-    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("position ASC")
+    @ManyToMany
+    @JoinTable(
+            name = "project_members",
+            joinColumns = @JoinColumn(name = "project_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
     @Builder.Default
-    private List<TaskList> lists = new ArrayList<>();
+    private Set<User> members = new HashSet<>();
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private Set<TaskList> taskLists = new HashSet<>();
 
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    /**
+     * Helper method to add a member to the project
+     */
+    public void addMember(User user) {
+        members.add(user);
+    }
+
+    /**
+     * Helper method to remove a member from the project
+     */
+    public boolean removeMember(User user) {
+        return members.remove(user);
+    }
+
+    /**
+     * Helper method to add a task list to the project
+     */
+    public void addTaskList(TaskList taskList) {
+        taskLists.add(taskList);
+        taskList.setProject(this);
+    }
+
+    /**
+     * Helper method to remove a task list from the project
+     */
+    public void removeTaskList(TaskList taskList) {
+        taskLists.remove(taskList);
+        taskList.setProject(null);
+    }
 }

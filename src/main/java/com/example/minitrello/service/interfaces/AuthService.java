@@ -4,6 +4,7 @@ import com.example.minitrello.dto.auth.LoginRequest;
 import com.example.minitrello.dto.auth.LoginResponse;
 import com.example.minitrello.dto.auth.RegisterRequest;
 import com.example.minitrello.dto.user.UserDto;
+import com.example.minitrello.model.User;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
@@ -54,4 +55,7 @@ public interface AuthService {
      */
     @PreAuthorize("isAuthenticated()")
     Long getCurrentAuthenticatedUserId();
+
+    @PreAuthorize("isAuthenticated()")
+    User getCurrentAuthenticatedUserEntity();
 }

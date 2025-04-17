@@ -108,9 +108,19 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(readOnly = true)
     public UserDto getCurrentAuthenticatedUserDto() {
-        log.debug("Getting currently authenticated user as DTO");
-        User user = getAuthenticatedUserEntity();
-        return userService.toDto(user);
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            log.warn("No authenticated user found in security context");
+            throw new IllegalStateException("User not authenticated");
+        }
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        User user = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userDetails.getId()));
+
+        return userMapper.toDto(user);
     }
 
     /**
@@ -136,7 +146,8 @@ public class AuthServiceImpl implements AuthService {
      *
      * @return the authenticated user entity
      */
-    private User getAuthenticatedUserEntity() {
+    @Override
+    public User getCurrentAuthenticatedUserEntity() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
