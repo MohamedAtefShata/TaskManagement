@@ -9,8 +9,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-import java.util.List;
-
 @Mapper(componentModel = "spring", uses = {TaskMapper.class})
 public interface TaskListMapper {
 
@@ -33,5 +31,4 @@ public interface TaskListMapper {
     @Mapping(target = "updatedAt", ignore = true)
     void updateTaskListFromDto(TaskListUpdateDto updateDto, @MappingTarget TaskList taskList);
 
-    List<TaskListDto> toDtoList(List<TaskList> taskLists);
 }
