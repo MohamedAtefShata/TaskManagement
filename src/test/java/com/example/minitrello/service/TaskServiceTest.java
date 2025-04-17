@@ -55,7 +55,6 @@ public class TaskServiceTest {
     private TaskServiceImpl taskService;
 
     private User testUser;
-    private Project testProject;
     private TaskList testTaskList;
     private TaskList targetTaskList;
     private Task testTask;
@@ -80,7 +79,7 @@ public class TaskServiceTest {
                 .build();
 
         // Create test project
-        testProject = Project.builder()
+        Project testProject = Project.builder()
                 .id(PROJECT_ID)
                 .name("Test Project")
                 .owner(testUser)

@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -175,7 +176,7 @@ public class TaskServiceImpl implements TaskService {
 
         // Return tasks ordered by position
         return taskList.getTasks().stream()
-                .sorted((t1, t2) -> Integer.compare(t1.getPosition(), t2.getPosition()))
+                .sorted(Comparator.comparingInt(Task::getPosition))
                 .map(taskMapper::toDto)
                 .collect(Collectors.toList());
     }

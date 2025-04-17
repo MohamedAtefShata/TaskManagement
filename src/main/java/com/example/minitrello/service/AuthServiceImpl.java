@@ -108,7 +108,6 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(readOnly = true)
     public UserDto getCurrentAuthenticatedUserDto() {
-
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -120,7 +119,7 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findById(userDetails.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userDetails.getId()));
 
-        return userMapper.toDto(user);
+        return userService.toDto(user);
     }
 
     /**
@@ -141,22 +140,4 @@ public class AuthServiceImpl implements AuthService {
         return userDetails.getId();
     }
 
-    /**
-     * Helper method to get the authenticated user entity.
-     *
-     * @return the authenticated user entity
-     */
-    @Override
-    public User getCurrentAuthenticatedUserEntity() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            log.warn("No authenticated user found in security context");
-            throw new IllegalStateException("User not authenticated");
-        }
-
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        return userRepository.findById(userDetails.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userDetails.getId()));
-    }
 }

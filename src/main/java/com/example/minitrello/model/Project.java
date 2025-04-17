@@ -69,19 +69,4 @@ public class Project {
         return members.remove(user);
     }
 
-    /**
-     * Helper method to add a task list to the project
-     */
-    public void addTaskList(TaskList taskList) {
-        taskLists.add(taskList);
-        taskList.setProject(this);
-    }
-
-    /**
-     * Helper method to remove a task list from the project
-     */
-    public void removeTaskList(TaskList taskList) {
-        taskLists.remove(taskList);
-        taskList.setProject(null);
-    }
 }
