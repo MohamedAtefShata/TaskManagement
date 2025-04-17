@@ -9,8 +9,6 @@ import com.example.minitrello.model.User;
 import com.example.minitrello.security.UserDetailsImpl;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-
 /**
  * Manual implementation of UserMapper.
  * Maps between User entities and DTOs.
