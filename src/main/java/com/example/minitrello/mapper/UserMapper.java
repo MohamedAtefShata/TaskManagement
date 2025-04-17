@@ -5,6 +5,7 @@ import com.example.minitrello.dto.auth.RegisterRequest;
 import com.example.minitrello.dto.user.UserDto;
 import com.example.minitrello.dto.user.UserUpdateDto;
 import com.example.minitrello.model.User;
+import com.example.minitrello.security.UserDetailsImpl;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -36,5 +37,5 @@ public interface UserMapper {
     void updateUserFromDto(UserUpdateDto updateDto, @MappingTarget User user);
 
     @Mapping(target = "tokenType", constant = "Bearer")
-    LoginResponse toLoginResponse(User user, String token);
+    LoginResponse toLoginResponse(UserDetailsImpl userDetails, String token);
 }

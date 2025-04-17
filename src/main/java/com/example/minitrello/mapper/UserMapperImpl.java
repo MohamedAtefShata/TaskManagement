@@ -4,7 +4,10 @@ import com.example.minitrello.dto.auth.LoginResponse;
 import com.example.minitrello.dto.auth.RegisterRequest;
 import com.example.minitrello.dto.user.UserDto;
 import com.example.minitrello.dto.user.UserUpdateDto;
+import com.example.minitrello.model.Role;
 import com.example.minitrello.model.User;
+import com.example.minitrello.security.UserDetailsImpl;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 /**
@@ -59,18 +62,18 @@ public class UserMapperImpl implements UserMapper {
     }
 
     @Override
-    public LoginResponse toLoginResponse(User user, String token) {
-        if (user == null) {
+    public LoginResponse toLoginResponse(UserDetailsImpl userDetails, String token) {
+        if (userDetails == null) {
             return null;
         }
 
         return LoginResponse.builder()
                 .token(token)
                 .tokenType("Bearer")
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .role(user.getRole())
+                .id(userDetails.getId())
+                .name(userDetails.getName())
+                .email(userDetails.getEmail())
+                .role(Role.valueOf(userDetails.getAuthorities().iterator().next().getAuthority()))
                 .build();
     }
 }

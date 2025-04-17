@@ -199,7 +199,6 @@ public class UserServiceTest {
         // Arrange
         Pageable pageable = PageRequest.of(0, 10);
         Page<User> userPage = new PageImpl<>(List.of(testUser), pageable, 1);
-        Page<UserDto> dtoPage = new PageImpl<>(List.of(userDto), pageable, 1);
 
         when(userRepository.findAll(pageable)).thenReturn(userPage);
         when(userMapper.toDto(testUser)).thenReturn(userDto);

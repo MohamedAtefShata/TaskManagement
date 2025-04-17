@@ -90,14 +90,7 @@ public class AuthServiceImpl implements AuthService {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
         // Build and return response
-        return LoginResponse.builder()
-                .token(jwt)
-                .tokenType("Bearer")
-                .id(userDetails.getId())
-                .name(userDetails.getName())
-                .email(userDetails.getEmail())
-                .role(Role.valueOf(userDetails.getAuthorities().iterator().next().getAuthority()))
-                .build();
+        return  userMapper.toLoginResponse(userDetails,jwt);
     }
 
     /**
