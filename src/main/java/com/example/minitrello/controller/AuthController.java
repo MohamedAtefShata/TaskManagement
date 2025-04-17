@@ -4,7 +4,6 @@ import com.example.minitrello.dto.auth.LoginRequest;
 import com.example.minitrello.dto.auth.LoginResponse;
 import com.example.minitrello.dto.auth.RegisterRequest;
 import com.example.minitrello.dto.user.UserDto;
-import com.example.minitrello.model.User;
 import com.example.minitrello.service.interfaces.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -22,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  * Controller for handling authentication-related endpoints.
  * Provides APIs for user registration and login.
+ * Only handles DTOs for request/response, never entities.
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -36,7 +36,7 @@ public class AuthController {
      * Registers a new user in the system.
      *
      * @param registerRequest DTO containing registration details
-     * @return ResponseEntity containing the created user information
+     * @return ResponseEntity containing the created user information as DTO
      */
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Creates a new user account with USER role")
@@ -46,10 +46,10 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Invalid input or email already in use"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<User> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<UserDto> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         log.info("Received registration request for email: {}", registerRequest.getEmail());
-        User user = authService.registerUser(registerRequest);
-        return new ResponseEntity<>(user, HttpStatus.CREATED);
+        UserDto userDto = authService.registerUser(registerRequest);
+        return new ResponseEntity<>(userDto, HttpStatus.CREATED);
     }
 
     /**

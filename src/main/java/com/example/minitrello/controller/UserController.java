@@ -1,7 +1,7 @@
 package com.example.minitrello.controller;
 
 import com.example.minitrello.dto.user.UserDto;
-import com.example.minitrello.model.User;
+import com.example.minitrello.dto.user.UserUpdateDto;
 import com.example.minitrello.service.interfaces.AuthService;
 import com.example.minitrello.service.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,11 +21,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 /**
  * Controller for managing user-related operations.
  * Provides APIs for fetching, updating, and deleting user information.
+ * Only handles DTOs for request/response, never entities.
  */
 @RestController
 @RequestMapping("/api/users")
@@ -41,71 +40,67 @@ public class UserController {
     /**
      * Retrieves the profile of the currently authenticated user.
      *
-     * @return ResponseEntity containing the user profile
+     * @return ResponseEntity containing the user profile DTO
      */
     @GetMapping("/me")
     @Operation(summary = "Get current user profile", description = "Retrieves the profile of the currently authenticated user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Profile retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = User.class))),
+                    content = @Content(schema = @Schema(implementation = UserDto.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<User> getCurrentUserProfile() {
+    public ResponseEntity<UserDto> getCurrentUserProfile() {
         log.debug("Fetching current user profile");
-        User currentUser = authService.getCurrentAuthenticatedUser();
+        UserDto currentUser = authService.getCurrentAuthenticatedUserDto();
         return ResponseEntity.ok(currentUser);
     }
 
     /**
      * Updates the profile of the currently authenticated user.
+     * Uses a dedicated DTO for update operations to control which fields can be modified.
      *
-     * @param userDto DTO containing user information to update
-     * @return ResponseEntity containing the updated user profile
+     * @param updateDto DTO containing user information to update
+     * @return ResponseEntity containing the updated user profile DTO
      */
     @PutMapping("/me")
     @Operation(summary = "Update current user profile", description = "Updates the profile of the currently authenticated user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Profile updated successfully",
-                    content = @Content(schema = @Schema(implementation = User.class))),
+                    content = @Content(schema = @Schema(implementation = UserDto.class))),
             @ApiResponse(responseCode = "400", description = "Invalid input"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<User> updateCurrentUserProfile(@Valid @RequestBody UserDto userDto) {
+    public ResponseEntity<UserDto> updateCurrentUserProfile(@Valid @RequestBody UserUpdateDto updateDto) {
         log.info("Updating current user profile");
-        User currentUser = authService.getCurrentAuthenticatedUser();
-
-        // Map DTO fields to User entity
-        User userToUpdate = new User();
-        userToUpdate.setName(userDto.getName());
-
-        User updatedUser = userService.updateUser(currentUser.getId(), userToUpdate);
+        Long currentUserId = authService.getCurrentAuthenticatedUserId();
+        UserDto updatedUser = userService.updateUser(currentUserId, updateDto);
         return ResponseEntity.ok(updatedUser);
     }
 
     /**
      * Retrieves a specific user by ID.
-     * Only accessible to users with ADMIN role.
+     * Only accessible to users with ADMIN role or the user themselves.
      *
      * @param id ID of the user to retrieve
-     * @return ResponseEntity containing the user information
+     * @return ResponseEntity containing the user information DTO
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Get user by ID", description = "Retrieves a specific user by their ID (admin only)")
+    @PreAuthorize("@userSecurity.isCurrentUser(#id) or hasRole('ADMIN')")
+    @Operation(summary = "Get user by ID", description = "Retrieves a specific user by their ID (admin or self)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = User.class))),
+                    content = @Content(schema = @Schema(implementation = UserDto.class))),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - requires admin role"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - requires admin role or be the user"),
             @ApiResponse(responseCode = "404", description = "User not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<User> getUserById(
+    public ResponseEntity<UserDto> getUserById(
             @Parameter(description = "User ID", required = true) @PathVariable Long id) {
         log.debug("Fetching user with ID: {}", id);
-        return userService.findById(id)
+        return userService.findDtoById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -115,7 +110,7 @@ public class UserController {
      * Only accessible to users with ADMIN role.
      *
      * @param pageable pagination information
-     * @return ResponseEntity containing a page of users
+     * @return ResponseEntity containing a page of user DTOs
      */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -124,12 +119,11 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Forbidden - requires admin role"),
-            @ApiResponse(responseCode = "500", description = "Internal server error1")
+            @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<Page<User>> getAllUsers(Pageable pageable) {
-        log.info("Finding all users with pagination");
+    public ResponseEntity<Page<UserDto>> getAllUsers(Pageable pageable) {
         log.debug("Fetching all users with pagination");
-        Page<User> users = userService.findAllUsers(pageable);
+        Page<UserDto> users = userService.findAllUser(pageable);
         return ResponseEntity.ok(users);
     }
 }

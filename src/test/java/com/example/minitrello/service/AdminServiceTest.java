@@ -1,10 +1,11 @@
 package com.example.minitrello.service;
 
+import com.example.minitrello.dto.user.UserDto;
 import com.example.minitrello.exception.ResourceNotFoundException;
 import com.example.minitrello.model.Role;
 import com.example.minitrello.model.User;
 import com.example.minitrello.repository.UserRepository;
-import com.example.minitrello.service.AdminServiceImpl;
+import com.example.minitrello.service.interfaces.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,11 +38,16 @@ public class AdminServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private AdminServiceImpl adminService;
 
     private User regularUser;
     private User adminUser;
+    private UserDto regularUserDto;
+    private UserDto adminUserDto;
 
     @BeforeEach
     void setUp() {
@@ -55,6 +61,14 @@ public class AdminServiceTest {
                 .isActive(true)
                 .build();
 
+        regularUserDto = UserDto.builder()
+                .id(1L)
+                .name("Regular User")
+                .email("user@example.com")
+                .role(Role.ROLE_USER)
+                .isActive(true)
+                .build();
+
         // Create an admin test user
         adminUser = User.builder()
                 .id(2L)
@@ -64,39 +78,62 @@ public class AdminServiceTest {
                 .role(Role.ROLE_ADMIN)
                 .isActive(true)
                 .build();
+
+        adminUserDto = UserDto.builder()
+                .id(2L)
+                .name("Admin User")
+                .email("admin@example.com")
+                .role(Role.ROLE_ADMIN)
+                .isActive(true)
+                .build();
     }
 
     @Test
     @DisplayName("Should change user role successfully")
-        // We're bypassing the @PreAuthorize check for unit tests
     void shouldChangeUserRoleSuccessfully() {
         // Arrange
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(regularUser));
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-            User savedUser = invocation.getArgument(0);
-            return savedUser;
-        });
+        User updatedUser = User.builder()
+                .id(1L)
+                .name("Regular User")
+                .email("user@example.com")
+                .password("password")
+                .role(Role.ROLE_ADMIN)
+                .isActive(true)
+                .build();
+
+        UserDto updatedUserDto = UserDto.builder()
+                .id(1L)
+                .name("Regular User")
+                .email("user@example.com")
+                .role(Role.ROLE_ADMIN)
+                .isActive(true)
+                .build();
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(regularUser));
+        when(userRepository.save(any(User.class))).thenReturn(updatedUser);
+        when(userService.toDto(updatedUser)).thenReturn(updatedUserDto);
 
         // Act
-        User updatedUser = adminService.changeUserRole(1L, Role.ROLE_ADMIN);
+        UserDto result = adminService.changeUserRole(1L, Role.ROLE_ADMIN);
 
         // Assert
-        assertThat(updatedUser).isNotNull();
-        assertThat(updatedUser.getRole()).isEqualTo(Role.ROLE_ADMIN);
-
+        assertThat(result).isNotNull();
+        assertThat(result.getRole()).isEqualTo(Role.ROLE_ADMIN);
         verify(userRepository, times(1)).findById(1L);
         verify(userRepository, times(1)).save(any(User.class));
+        verify(userService, times(1)).toDto(updatedUser);
     }
 
     @Test
     @DisplayName("Should throw ResourceNotFoundException when changing role of non-existent user")
     void shouldThrowResourceNotFoundExceptionWhenChangingRoleOfNonExistentUser() {
         // Arrange
-        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> adminService.changeUserRole(999L, Role.ROLE_ADMIN))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("User not found with id : '999'");
 
         verify(userRepository, times(1)).findById(999L);
         verify(userRepository, never()).save(any(User.class));
@@ -109,17 +146,20 @@ public class AdminServiceTest {
         Pageable pageable = PageRequest.of(0, 10);
         List<User> users = List.of(regularUser, adminUser);
         Page<User> userPage = new PageImpl<>(users, pageable, users.size());
+        Page<UserDto> dtoPage = new PageImpl<>(List.of(regularUserDto, adminUserDto), pageable, 2);
 
-        when(userRepository.findAll(any(Pageable.class))).thenReturn(userPage);
+        when(userRepository.findAll(pageable)).thenReturn(userPage);
+        when(userService.toDto(regularUser)).thenReturn(regularUserDto);
+        when(userService.toDto(adminUser)).thenReturn(adminUserDto);
 
         // Act
-        Page<User> result = adminService.getAllUsersDetailed(pageable);
+        Page<UserDto> result = adminService.getAllUsersDetailed(pageable);
 
         // Assert
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(2);
-        assertThat(result.getContent()).contains(regularUser, adminUser);
-
+        assertThat(result.getContent().get(0).getRole()).isEqualTo(Role.ROLE_USER);
+        assertThat(result.getContent().get(1).getRole()).isEqualTo(Role.ROLE_ADMIN);
         verify(userRepository, times(1)).findAll(pageable);
     }
 
@@ -127,28 +167,43 @@ public class AdminServiceTest {
     @DisplayName("Should disable user successfully")
     void shouldDisableUserSuccessfully() {
         // Arrange
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(regularUser));
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-            User savedUser = invocation.getArgument(0);
-            return savedUser;
-        });
+        User disabledUser = User.builder()
+                .id(1L)
+                .name("Regular User")
+                .email("user@example.com")
+                .password("password")
+                .role(Role.ROLE_USER)
+                .isActive(false)
+                .build();
+
+        UserDto disabledUserDto = UserDto.builder()
+                .id(1L)
+                .name("Regular User")
+                .email("user@example.com")
+                .role(Role.ROLE_USER)
+                .isActive(false)
+                .build();
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(regularUser));
+        when(userRepository.save(any(User.class))).thenReturn(disabledUser);
+        when(userService.toDto(disabledUser)).thenReturn(disabledUserDto);
 
         // Act
-        User disabledUser = adminService.disableUser(1L);
+        UserDto result = adminService.disableUser(1L);
 
         // Assert
-        assertThat(disabledUser).isNotNull();
-        assertThat(disabledUser.getIsActive()).isFalse();
-
+        assertThat(result).isNotNull();
+        assertThat(result.getIsActive()).isFalse();
         verify(userRepository, times(1)).findById(1L);
         verify(userRepository, times(1)).save(any(User.class));
+        verify(userService, times(1)).toDto(disabledUser);
     }
 
     @Test
     @DisplayName("Should throw AccessDeniedException when trying to disable admin user")
     void shouldThrowAccessDeniedExceptionWhenTryingToDisableAdminUser() {
         // Arrange
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(adminUser));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(adminUser));
 
         // Act & Assert
         assertThatThrownBy(() -> adminService.disableUser(2L))
@@ -173,20 +228,35 @@ public class AdminServiceTest {
                 .isActive(false)
                 .build();
 
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(disabledUser));
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-            User savedUser = invocation.getArgument(0);
-            return savedUser;
-        });
+        User enabledUser = User.builder()
+                .id(3L)
+                .name("Disabled User")
+                .email("disabled@example.com")
+                .password("password")
+                .role(Role.ROLE_USER)
+                .isActive(true)
+                .build();
+
+        UserDto enabledUserDto = UserDto.builder()
+                .id(3L)
+                .name("Disabled User")
+                .email("disabled@example.com")
+                .role(Role.ROLE_USER)
+                .isActive(true)
+                .build();
+
+        when(userRepository.findById(3L)).thenReturn(Optional.of(disabledUser));
+        when(userRepository.save(any(User.class))).thenReturn(enabledUser);
+        when(userService.toDto(enabledUser)).thenReturn(enabledUserDto);
 
         // Act
-        User enabledUser = adminService.enableUser(3L);
+        UserDto result = adminService.enableUser(3L);
 
         // Assert
-        assertThat(enabledUser).isNotNull();
-        assertThat(enabledUser.getIsActive()).isTrue();
-
+        assertThat(result).isNotNull();
+        assertThat(result.getIsActive()).isTrue();
         verify(userRepository, times(1)).findById(3L);
         verify(userRepository, times(1)).save(any(User.class));
+        verify(userService, times(1)).toDto(enabledUser);
     }
 }

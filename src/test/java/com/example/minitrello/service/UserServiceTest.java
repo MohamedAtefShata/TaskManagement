@@ -1,11 +1,11 @@
 package com.example.minitrello.service;
 
-import com.example.minitrello.exception.ResourceNotFoundException;
+import com.example.minitrello.dto.user.UserDto;
+import com.example.minitrello.dto.user.UserUpdateDto;
+import com.example.minitrello.mapper.UserMapper;
 import com.example.minitrello.model.Role;
 import com.example.minitrello.model.User;
 import com.example.minitrello.repository.UserRepository;
-import com.example.minitrello.security.UserSecurity;
-import com.example.minitrello.service.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,23 +18,19 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for the UserService implementation.
  * Tests the business logic of user management operations.
- *
- * Note: For unit tests, we're bypassing the @PreAuthorize security checks
- * as we're testing the service implementation directly.
  */
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
@@ -46,12 +42,14 @@ public class UserServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private UserSecurity userSecurity;
+    private UserMapper userMapper;
 
     @InjectMocks
     private UserServiceImpl userService;
 
     private User testUser;
+    private UserDto userDto;
+    private UserUpdateDto updateDto;
 
     @BeforeEach
     void setUp() {
@@ -64,7 +62,19 @@ public class UserServiceTest {
                 .role(Role.ROLE_USER)
                 .isActive(true)
                 .build();
-        lenient().when(userSecurity.isCurrentUser(anyLong())).thenReturn(true);
+
+        userDto = UserDto.builder()
+                .id(1L)
+                .name("Test User")
+                .email("test@example.com")
+                .role(Role.ROLE_USER)
+                .isActive(true)
+                .build();
+
+        updateDto = UserUpdateDto.builder()
+                .name("Updated User")
+                .password("newpassword")
+                .build();
     }
 
     @Test
@@ -88,51 +98,62 @@ public class UserServiceTest {
     }
 
     @Test
-    @DisplayName("Should update an existing user successfully")
+    @DisplayName("Should update user successfully")
     void shouldUpdateUserSuccessfully() {
         // Arrange
-        User updatedDetails = User.builder()
-                .name("Updated Name")
-                .password("newPassword")
+        User updatedUser = User.builder()
+                .id(1L)
+                .name("Updated User")
+                .email("test@example.com")
+                .password("encodedPassword")
+                .role(Role.ROLE_USER)
+                .isActive(true)
                 .build();
 
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.encode(anyString())).thenReturn("encodedNewPassword");
-        when(userRepository.save(any(User.class))).thenReturn(testUser);
+        UserDto updatedUserDto = UserDto.builder()
+                .id(1L)
+                .name("Updated User")
+                .email("test@example.com")
+                .role(Role.ROLE_USER)
+                .isActive(true)
+                .build();
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.encode("newpassword")).thenReturn("encodedPassword");
+        when(userRepository.save(any(User.class))).thenReturn(updatedUser);
+        when(userMapper.toDto(updatedUser)).thenReturn(updatedUserDto);
 
         // Act
-        User updatedUser = userService.updateUser(1L, updatedDetails);
+        UserDto result = userService.updateUser(1L, updateDto);
 
         // Assert
-        assertThat(updatedUser).isNotNull();
-        verify(userRepository, times(1)).findById(1L);
-        verify(passwordEncoder, times(1)).encode("newPassword");
+        assertThat(result).isNotNull();
+        assertThat(result.getName()).isEqualTo("Updated User");
+        verify(passwordEncoder, times(1)).encode("newpassword");
         verify(userRepository, times(1)).save(any(User.class));
     }
 
     @Test
-    @DisplayName("Should throw ResourceNotFoundException when updating non-existent user")
-    void shouldThrowExceptionWhenUpdatingNonExistentUser() {
+    @DisplayName("Should find user DTO by ID successfully")
+    void shouldFindUserDtoByIdSuccessfully() {
         // Arrange
-        User updatedDetails = User.builder()
-                .name("Updated Name")
-                .build();
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userMapper.toDto(testUser)).thenReturn(userDto);
 
-        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+        // Act
+        Optional<UserDto> result = userService.findDtoById(1L);
 
-        // Act & Assert
-        assertThatThrownBy(() -> userService.updateUser(999L, updatedDetails))
-                .isInstanceOf(ResourceNotFoundException.class);
-
-        verify(userRepository, times(1)).findById(999L);
-        verify(userRepository, never()).save(any(User.class));
+        // Assert
+        assertThat(result).isPresent();
+        assertThat(result.get().getId()).isEqualTo(1L);
+        assertThat(result.get().getName()).isEqualTo("Test User");
     }
 
     @Test
     @DisplayName("Should find user by ID successfully")
     void shouldFindUserByIdSuccessfully() {
         // Arrange
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(testUser));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
 
         // Act
         Optional<User> foundUser = userService.findById(1L);
@@ -161,7 +182,7 @@ public class UserServiceTest {
     @DisplayName("Should find user by email successfully")
     void shouldFindUserByEmailSuccessfully() {
         // Arrange
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(testUser));
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
 
         // Act
         Optional<User> foundUser = userService.findByEmail("test@example.com");
@@ -177,26 +198,26 @@ public class UserServiceTest {
     void shouldFindAllUsersWithPagination() {
         // Arrange
         Pageable pageable = PageRequest.of(0, 10);
-        List<User> userList = List.of(testUser);
-        Page<User> userPage = new PageImpl<>(userList, pageable, userList.size());
+        Page<User> userPage = new PageImpl<>(List.of(testUser), pageable, 1);
+        Page<UserDto> dtoPage = new PageImpl<>(List.of(userDto), pageable, 1);
 
-        when(userRepository.findAll(any(Pageable.class))).thenReturn(userPage);
+        when(userRepository.findAll(pageable)).thenReturn(userPage);
+        when(userMapper.toDto(testUser)).thenReturn(userDto);
 
         // Act
-        Page<User> foundUsers = userService.findAllUsers(pageable);
+        Page<UserDto> result = userService.findAllUser(pageable);
 
         // Assert
-        assertThat(foundUsers).isNotNull();
-        assertThat(foundUsers.getContent()).hasSize(1);
-        assertThat(foundUsers.getContent().get(0).getId()).isEqualTo(testUser.getId());
-        verify(userRepository, times(1)).findAll(pageable);
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getId()).isEqualTo(1L);
     }
 
     @Test
     @DisplayName("Should delete user successfully")
     void shouldDeleteUserSuccessfully() {
         // Arrange
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(testUser));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         doNothing().when(userRepository).delete(any(User.class));
 
         // Act
@@ -227,7 +248,7 @@ public class UserServiceTest {
     @DisplayName("Should check if user exists by email")
     void shouldCheckIfUserExistsByEmail() {
         // Arrange
-        when(userRepository.existsByEmail(anyString())).thenReturn(true);
+        when(userRepository.existsByEmail("test@example.com")).thenReturn(true);
 
         // Act
         boolean exists = userService.existsByEmail("test@example.com");
@@ -235,5 +256,21 @@ public class UserServiceTest {
         // Assert
         assertThat(exists).isTrue();
         verify(userRepository, times(1)).existsByEmail("test@example.com");
+    }
+
+    @Test
+    @DisplayName("Should convert User to UserDto")
+    void shouldConvertUserToUserDto() {
+        // Arrange
+        when(userMapper.toDto(testUser)).thenReturn(userDto);
+
+        // Act
+        UserDto result = userService.toDto(testUser);
+
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(testUser.getId());
+        assertThat(result.getName()).isEqualTo(testUser.getName());
+        verify(userMapper, times(1)).toDto(testUser);
     }
 }

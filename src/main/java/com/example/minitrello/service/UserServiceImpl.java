@@ -1,6 +1,9 @@
 package com.example.minitrello.service;
 
+import com.example.minitrello.dto.user.UserDto;
+import com.example.minitrello.dto.user.UserUpdateDto;
 import com.example.minitrello.exception.ResourceNotFoundException;
+import com.example.minitrello.mapper.UserMapper;
 import com.example.minitrello.model.User;
 import com.example.minitrello.repository.UserRepository;
 import com.example.minitrello.service.interfaces.UserService;
@@ -17,6 +20,7 @@ import java.util.Optional;
 /**
  * Implementation of the UserService interface.
  * Provides user management functionality.
+ * Handles entity-to-DTO conversion for controllers.
  */
 @Service
 @RequiredArgsConstructor
@@ -25,6 +29,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
     /**
      * {@inheritDoc}
@@ -45,23 +50,34 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional
-    public User updateUser(Long id, User userDetails) {
+    public UserDto updateUser(Long id, UserUpdateDto updateDto) {
         log.info("Updating user with ID: {}", id);
 
-        return userRepository.findById(id)
+        User updatedUser = userRepository.findById(id)
                 .map(existingUser -> {
-                    // Update fields that can be updated
-                    existingUser.setName(userDetails.getName());
+                    // Apply DTO fields to entity
+                    userMapper.updateUserFromDto(updateDto, existingUser);
 
-                    // Only update password if a new one is provided
-                    if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
-                        existingUser.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+                    // Handle password separately due to encoding
+                    if (updateDto.getPassword() != null && !updateDto.getPassword().isEmpty()) {
+                        existingUser.setPassword(passwordEncoder.encode(updateDto.getPassword()));
                     }
 
-                    // Save and return updated user
                     return userRepository.save(existingUser);
                 })
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+
+        return toDto(updatedUser);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UserDto> findDtoById(Long id) {
+        log.debug("Finding user DTO by ID: {}", id);
+        return userRepository.findById(id).map(this::toDto);
     }
 
     /**
@@ -89,9 +105,9 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<User> findAllUsers(Pageable pageable) {
-        log.debug("Finding all users with pagination");
-        return userRepository.findAll(pageable);
+    public Page<UserDto> findAllUser(Pageable pageable) {
+        log.debug("Finding all user DTOs with pagination");
+        return userRepository.findAll(pageable).map(this::toDto);
     }
 
     /**
@@ -117,5 +133,17 @@ public class UserServiceImpl implements UserService {
     public boolean existsByEmail(String email) {
         log.debug("Checking if user exists with email: {}", email);
         return userRepository.existsByEmail(email);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public UserDto toDto(User user) {
+        if (user == null) {
+            return null;
+        }
+
+        return userMapper.toDto(user);
     }
 }

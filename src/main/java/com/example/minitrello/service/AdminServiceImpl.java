@@ -1,10 +1,12 @@
 package com.example.minitrello.service;
 
+import com.example.minitrello.dto.user.UserDto;
 import com.example.minitrello.exception.ResourceNotFoundException;
 import com.example.minitrello.model.Role;
 import com.example.minitrello.model.User;
 import com.example.minitrello.repository.UserRepository;
 import com.example.minitrello.service.interfaces.AdminService;
+import com.example.minitrello.service.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -16,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Implementation of the AdminService interface.
  * Provides admin-specific user management functionality.
- * Security is enforced via @PreAuthorize annotations on the interface methods.
+ * Handles entity-to-DTO conversion for controllers.
  */
 @Service
 @RequiredArgsConstructor
@@ -24,13 +26,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminServiceImpl implements AdminService {
 
     private final UserRepository userRepository;
+    private final UserService userService;
 
     /**
      * {@inheritDoc}
      */
     @Override
     @Transactional
-    public User changeUserRole(Long userId, Role role) {
+    public UserDto changeUserRole(Long userId, Role role) {
         log.info("Changing role of user ID {} to {}", userId, role);
 
         // Find user
@@ -40,8 +43,9 @@ public class AdminServiceImpl implements AdminService {
         // Update role
         user.setRole(role);
 
-        // Save and return updated user
-        return userRepository.save(user);
+        // Save, map to DTO, and return
+        User updatedUser = userRepository.save(user);
+        return userService.toDto(updatedUser);
     }
 
     /**
@@ -49,11 +53,11 @@ public class AdminServiceImpl implements AdminService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<User> getAllUsersDetailed(Pageable pageable) {
+    public Page<UserDto> getAllUsersDetailed(Pageable pageable) {
         log.info("Getting detailed information for all users with pagination");
 
-        // Fetch all users with pagination
-        return userRepository.findAll(pageable);
+        // Fetch all users with pagination and map to DTOs
+        return userRepository.findAll(pageable).map(userService::toDto);
     }
 
     /**
@@ -61,7 +65,7 @@ public class AdminServiceImpl implements AdminService {
      */
     @Override
     @Transactional
-    public User disableUser(Long userId) {
+    public UserDto disableUser(Long userId) {
         log.info("Disabling user with ID: {}", userId);
 
         // Find user
@@ -77,8 +81,9 @@ public class AdminServiceImpl implements AdminService {
         // Set user as inactive
         user.setIsActive(false);
 
-        // Save and return updated user
-        return userRepository.save(user);
+        // Save, map to DTO, and return
+        User updatedUser = userRepository.save(user);
+        return userService.toDto(updatedUser);
     }
 
     /**
@@ -86,7 +91,7 @@ public class AdminServiceImpl implements AdminService {
      */
     @Override
     @Transactional
-    public User enableUser(Long userId) {
+    public UserDto enableUser(Long userId) {
         log.info("Enabling user with ID: {}", userId);
 
         // Find user
@@ -96,7 +101,8 @@ public class AdminServiceImpl implements AdminService {
         // Enable user
         user.setIsActive(true);
 
-        // Save and return updated user
-        return userRepository.save(user);
+        // Save, map to DTO, and return
+        User updatedUser = userRepository.save(user);
+        return userService.toDto(updatedUser);
     }
 }

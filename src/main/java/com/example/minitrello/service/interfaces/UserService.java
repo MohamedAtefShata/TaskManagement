@@ -1,5 +1,7 @@
 package com.example.minitrello.service.interfaces;
 
+import com.example.minitrello.dto.user.UserDto;
+import com.example.minitrello.dto.user.UserUpdateDto;
 import com.example.minitrello.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,7 +12,7 @@ import java.util.Optional;
 /**
  * Service interface for managing user-related operations.
  * Provides methods for CRUD operations on users and finding users by various criteria.
- * Security constraints are defined at the interface level.
+ * Returns DTOs to controllers for all operations.
  */
 public interface UserService {
 
@@ -18,7 +20,7 @@ public interface UserService {
      * Creates a new user.
      *
      * @param user the user entity to be created
-     * @return the created user
+     * @return the created user entity (for internal service use)
      */
     User createUser(User user);
 
@@ -27,11 +29,11 @@ public interface UserService {
      * Users can only update their own profiles unless they have admin role.
      *
      * @param id the ID of the user to update
-     * @param userDetails the user details to update
-     * @return the updated user
+     * @param updateDto the DTO containing fields to update
+     * @return the updated user as DTO
      */
     @PreAuthorize("@userSecurity.isCurrentUser(#id) or hasRole('ADMIN')")
-    User updateUser(Long id, User userDetails);
+    UserDto updateUser(Long id, UserUpdateDto updateDto);
 
     /**
      * Finds a user by ID.
@@ -42,6 +44,16 @@ public interface UserService {
      */
     @PreAuthorize("@userSecurity.isCurrentUser(#id) or hasRole('ADMIN')")
     Optional<User> findById(Long id);
+
+    /**
+     * Finds a user by ID and returns as DTO.
+     * Regular users can only access their own profiles, admins can access any profile.
+     *
+     * @param id the ID of the user to find
+     * @return an Optional containing the found user DTO, or empty if not found
+     */
+    @PreAuthorize("@userSecurity.isCurrentUser(#id) or hasRole('ADMIN')")
+    Optional<UserDto> findDtoById(Long id);
 
     /**
      * Finds a user by email.
@@ -56,10 +68,10 @@ public interface UserService {
      * Only administrators can access this method.
      *
      * @param pageable pagination information
-     * @return a Page of users
+     * @return a Page of user DTOs
      */
     @PreAuthorize("hasRole('ADMIN')")
-    Page<User> findAllUsers(Pageable pageable);
+    Page<UserDto> findAllUser(Pageable pageable);
 
     /**
      * Deletes a user by ID.
@@ -78,4 +90,12 @@ public interface UserService {
      * @return true if a user with the email exists, false otherwise
      */
     boolean existsByEmail(String email);
+
+    /**
+     * Converts a User entity to a UserDto.
+     *
+     * @param user the user entity to convert
+     * @return the user DTO
+     */
+    UserDto toDto(User user);
 }

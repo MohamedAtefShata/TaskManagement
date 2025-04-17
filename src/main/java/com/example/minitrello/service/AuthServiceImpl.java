@@ -3,13 +3,16 @@ package com.example.minitrello.service;
 import com.example.minitrello.dto.auth.LoginRequest;
 import com.example.minitrello.dto.auth.LoginResponse;
 import com.example.minitrello.dto.auth.RegisterRequest;
+import com.example.minitrello.dto.user.UserDto;
 import com.example.minitrello.exception.ResourceNotFoundException;
+import com.example.minitrello.mapper.UserMapper;
 import com.example.minitrello.model.Role;
 import com.example.minitrello.model.User;
 import com.example.minitrello.repository.UserRepository;
 import com.example.minitrello.security.JwtUtils;
 import com.example.minitrello.security.UserDetailsImpl;
 import com.example.minitrello.service.interfaces.AuthService;
+import com.example.minitrello.service.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Implementation of the AuthService interface.
  * Handles user authentication, registration, and security operations.
+ * Manages entity-to-DTO conversion for controllers.
  */
 @Service
 @RequiredArgsConstructor
@@ -33,13 +37,15 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
+    private final UserMapper userMapper;
+    private final UserService userService;
 
     /**
      * {@inheritDoc}
      */
     @Override
     @Transactional
-    public User registerUser(RegisterRequest registerRequest) {
+    public UserDto registerUser(RegisterRequest registerRequest) {
         log.info("Registering new user with email: {}", registerRequest.getEmail());
 
         // Check if email already exists
@@ -48,15 +54,15 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalArgumentException("Email is already in use");
         }
 
-        // Create new user
-        User user = User.builder()
-                .name(registerRequest.getName())
-                .email(registerRequest.getEmail())
-                .password(passwordEncoder.encode(registerRequest.getPassword()))
-                .role(Role.ROLE_USER) // Default role
-                .build();
+        // Create new user entity from DTO
+        User user = userMapper.toEntity(registerRequest);
+        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        user.setRole(Role.ROLE_USER); // Default role
+        user.setIsActive(true);
 
-        return userRepository.save(user);
+        // Save user and return as DTO
+        User savedUser = userRepository.save(user);
+        return userService.toDto(savedUser);
     }
 
     /**
@@ -79,7 +85,6 @@ public class AuthServiceImpl implements AuthService {
 
         // Generate JWT token
         String jwt = jwtUtils.generateToken(authentication);
-
 
         // Get user details
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -109,10 +114,19 @@ public class AuthServiceImpl implements AuthService {
      */
     @Override
     @Transactional(readOnly = true)
-    public User getCurrentAuthenticatedUser() {
-        log.debug("Getting currently authenticated user");
+    public UserDto getCurrentAuthenticatedUserDto() {
+        log.debug("Getting currently authenticated user as DTO");
+        User user = getAuthenticatedUserEntity();
+        return userService.toDto(user);
+    }
 
-        // Get authentication from security context
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Long getCurrentAuthenticatedUserId() {
+        log.debug("Getting currently authenticated user ID");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -120,10 +134,24 @@ public class AuthServiceImpl implements AuthService {
             throw new IllegalStateException("User not authenticated");
         }
 
-        // Get user details
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        return userDetails.getId();
+    }
 
-        // Find and return user from database
+    /**
+     * Helper method to get the authenticated user entity.
+     *
+     * @return the authenticated user entity
+     */
+    private User getAuthenticatedUserEntity() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            log.warn("No authenticated user found in security context");
+            throw new IllegalStateException("User not authenticated");
+        }
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         return userRepository.findById(userDetails.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userDetails.getId()));
     }

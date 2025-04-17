@@ -21,16 +21,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleResourceNotFoundException(
             ResourceNotFoundException ex, HttpServletRequest request) {
-
-        ApiErrorResponse apiError = ApiErrorResponse.builder()
-                .status(HttpStatus.NOT_FOUND)
-                .statusCode(HttpStatus.NOT_FOUND.value())
-                .message(ex.getMessage())
-                .path(request.getRequestURI())
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
+        return buildErrorResponse(ex.getMessage(), request, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -82,45 +73,47 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiErrorResponse> handleBadCredentialsException(
             BadCredentialsException ex, HttpServletRequest request) {
-
-        ApiErrorResponse apiError = ApiErrorResponse.builder()
-                .status(HttpStatus.UNAUTHORIZED)
-                .statusCode(HttpStatus.UNAUTHORIZED.value())
-                .message("Invalid username or password")
-                .path(request.getRequestURI())
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return new ResponseEntity<>(apiError, HttpStatus.UNAUTHORIZED);
+        return buildErrorResponse("Invalid username or password", request, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiErrorResponse> handleAccessDeniedException(
             AccessDeniedException ex, HttpServletRequest request) {
+        return buildErrorResponse("Access denied", request, HttpStatus.FORBIDDEN);
+    }
 
-        ApiErrorResponse apiError = ApiErrorResponse.builder()
-                .status(HttpStatus.FORBIDDEN)
-                .statusCode(HttpStatus.FORBIDDEN.value())
-                .message("Access denied")
-                .path(request.getRequestURI())
-                .timestamp(LocalDateTime.now())
-                .build();
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(
+            IllegalArgumentException ex, HttpServletRequest request) {
+        return buildErrorResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST);
+    }
 
-        return new ResponseEntity<>(apiError, HttpStatus.FORBIDDEN);
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiErrorResponse> handleIllegalStateException(
+            IllegalStateException ex, HttpServletRequest request) {
+        return buildErrorResponse(ex.getMessage(), request, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGenericException(
             Exception ex, HttpServletRequest request) {
+        return buildErrorResponse("An unexpected error occurred", request, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    /**
+     * Helper method to build a standardized error response
+     */
+    private ResponseEntity<ApiErrorResponse> buildErrorResponse(
+            String message, HttpServletRequest request, HttpStatus status) {
 
         ApiErrorResponse apiError = ApiErrorResponse.builder()
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .message("An unexpected error occurred")
+                .status(status)
+                .statusCode(status.value())
+                .message(message)
                 .path(request.getRequestURI())
                 .timestamp(LocalDateTime.now())
                 .build();
 
-        return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(apiError, status);
     }
 }

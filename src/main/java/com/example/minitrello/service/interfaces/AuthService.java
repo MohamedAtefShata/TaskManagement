@@ -3,13 +3,13 @@ package com.example.minitrello.service.interfaces;
 import com.example.minitrello.dto.auth.LoginRequest;
 import com.example.minitrello.dto.auth.LoginResponse;
 import com.example.minitrello.dto.auth.RegisterRequest;
-import com.example.minitrello.model.User;
+import com.example.minitrello.dto.user.UserDto;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * Service interface for authentication operations.
  * Provides methods for user registration, login, and token validation.
- * Security constraints are defined at the method level.
+ * Returns DTOs rather than entities to controllers.
  */
 public interface AuthService {
 
@@ -17,9 +17,9 @@ public interface AuthService {
      * Registers a new user.
      *
      * @param registerRequest the registration details
-     * @return the newly created user
+     * @return the newly created user DTO
      */
-    User registerUser(RegisterRequest registerRequest);
+    UserDto registerUser(RegisterRequest registerRequest);
 
     /**
      * Authenticates a user and generates a JWT token.
@@ -41,8 +41,17 @@ public interface AuthService {
      * Gets the authenticated user from the security context.
      * Requires authentication (any role).
      *
-     * @return the currently authenticated user
+     * @return the currently authenticated user as DTO
      */
     @PreAuthorize("isAuthenticated()")
-    User getCurrentAuthenticatedUser();
+    UserDto getCurrentAuthenticatedUserDto();
+
+    /**
+     * Gets the ID of the authenticated user from the security context.
+     * Requires authentication (any role).
+     *
+     * @return the currently authenticated user's ID
+     */
+    @PreAuthorize("isAuthenticated()")
+    Long getCurrentAuthenticatedUserId();
 }
