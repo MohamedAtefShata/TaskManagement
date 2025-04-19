@@ -2,6 +2,7 @@ package com.example.minitrello.mapper;
 
 import com.example.minitrello.dto.auth.LoginResponse;
 import com.example.minitrello.dto.auth.RegisterRequest;
+import com.example.minitrello.dto.user.SimpleUserDto;
 import com.example.minitrello.dto.user.UserDto;
 import com.example.minitrello.dto.user.UserUpdateDto;
 import com.example.minitrello.model.Role;
@@ -17,6 +18,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserMapperImpl implements UserMapper {
 
+    @Override
+    public SimpleUserDto toSimpleUserDto(User user) {
+        if (user == null) {
+            return null;
+        }
+
+        return SimpleUserDto.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .build();
+    }
     @Override
     public UserDto toDto(User user) {
         if (user == null) {

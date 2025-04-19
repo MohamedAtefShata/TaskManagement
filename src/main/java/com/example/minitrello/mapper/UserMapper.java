@@ -2,6 +2,7 @@ package com.example.minitrello.mapper;
 
 import com.example.minitrello.dto.auth.LoginResponse;
 import com.example.minitrello.dto.auth.RegisterRequest;
+import com.example.minitrello.dto.user.SimpleUserDto;
 import com.example.minitrello.dto.user.UserDto;
 import com.example.minitrello.dto.user.UserUpdateDto;
 import com.example.minitrello.model.User;
@@ -12,6 +13,8 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
+
+    SimpleUserDto toSimpleUserDto(User user);
 
     UserDto toDto(User user);
 

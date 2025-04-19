@@ -1,5 +1,7 @@
 package com.example.minitrello.dto.project;
 
+import com.example.minitrello.dto.tasklist.TaskListDto;
+import com.example.minitrello.dto.user.SimpleUserDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Data Transfer Object for Project entity.
@@ -28,6 +31,10 @@ public class ProjectDto {
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Integer taskListCount;
+
+    private List<SimpleUserDto> members;
+
+    private List<TaskListDto> taskLists;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

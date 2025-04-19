@@ -9,13 +9,15 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {UserMapper.class, TaskListMapper.class})
 public interface ProjectMapper {
 
     @Mapping(target = "ownerId", source = "owner.id")
     @Mapping(target = "ownerName", source = "owner.name")
     @Mapping(target = "memberCount", expression = "java(project.getMembers().size())")
     @Mapping(target = "taskListCount", expression = "java(project.getTaskLists().size())")
+    @Mapping(target = "members", source = "members")
+    @Mapping(target = "taskLists", source = "taskLists")
     ProjectDto toDto(Project project);
 
     @Mapping(target = "id", ignore = true)
