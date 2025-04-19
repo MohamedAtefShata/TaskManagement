@@ -43,8 +43,8 @@ public class AuthController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User registered successfully",
                     content = @Content(schema = @Schema(implementation = UserDto.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input or email already in use"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<UserDto> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
         log.info("Received registration request for email: {}", registerRequest.getEmail());
@@ -63,8 +63,8 @@ public class AuthController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Authentication successful",
                     content = @Content(schema = @Schema(implementation = LoginResponse.class))),
-            @ApiResponse(responseCode = "401", description = "Invalid credentials"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<LoginResponse> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
         log.info("Received login request for email: {}", loginRequest.getEmail());
@@ -82,8 +82,8 @@ public class AuthController {
     @Operation(summary = "Validate JWT token", description = "Checks if the provided token is valid")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Token is valid"),
-            @ApiResponse(responseCode = "400", description = "Invalid token"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<Boolean> validateToken(@RequestParam String token) {
         log.debug("Received token validation request");

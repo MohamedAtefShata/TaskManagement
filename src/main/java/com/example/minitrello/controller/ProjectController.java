@@ -47,9 +47,9 @@ public class ProjectController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Project created successfully",
                     content = @Content(schema = @Schema(implementation = ProjectDto.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<ProjectDto> createProject(@Valid @RequestBody ProjectCreateDto createDto) {
         log.info("Creating new project: {}", createDto.getName());
@@ -68,9 +68,9 @@ public class ProjectController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Project retrieved successfully",
                     content = @Content(schema = @Schema(implementation = ProjectDto.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Project not found or no access"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "404", ref = "NotFound"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<ProjectDto> getProjectById(
             @Parameter(description = "Project ID", required = true) @PathVariable Long projectId) {
@@ -90,8 +90,8 @@ public class ProjectController {
     @Operation(summary = "Get accessible projects", description = "Retrieves all projects the current user has access to")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Projects retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<Page<ProjectDto>> getAccessibleProjects(Pageable pageable) {
         log.debug("Fetching all accessible projects with pagination");
@@ -109,8 +109,8 @@ public class ProjectController {
     @Operation(summary = "Get owned projects", description = "Retrieves all projects owned by the current user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Projects retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<Page<ProjectDto>> getOwnedProjects(Pageable pageable) {
         log.debug("Fetching owned projects with pagination");
@@ -130,10 +130,10 @@ public class ProjectController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Project updated successfully",
                     content = @Content(schema = @Schema(implementation = ProjectDto.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Project not found or no access"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "404", ref = "NotFound"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<ProjectDto> updateProject(
             @Parameter(description = "Project ID", required = true) @PathVariable Long projectId,
@@ -153,10 +153,10 @@ public class ProjectController {
     @Operation(summary = "Delete project", description = "Deletes a project if the user is the owner")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Project deleted successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - user is not the project owner"),
-            @ApiResponse(responseCode = "404", description = "Project not found"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
+            @ApiResponse(responseCode = "404", ref = "NotFound"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<Void> deleteProject(
             @Parameter(description = "Project ID", required = true) @PathVariable Long projectId) {
@@ -177,9 +177,9 @@ public class ProjectController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User added to project successfully",
                     content = @Content(schema = @Schema(implementation = ProjectDto.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Project or user not found or no access"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "404", ref = "NotFound"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<ProjectDto> addMemberToProject(
             @Parameter(description = "Project ID", required = true) @PathVariable Long projectId,
@@ -201,9 +201,9 @@ public class ProjectController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User removed from project successfully",
                     content = @Content(schema = @Schema(implementation = ProjectDto.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Project or user not found or no access"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "404", ref = "NotFound"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<ProjectDto> removeMemberFromProject(
             @Parameter(description = "Project ID", required = true) @PathVariable Long projectId,
@@ -223,10 +223,10 @@ public class ProjectController {
     @Operation(summary = "Leave project", description = "Current user leaves a project they are a member of")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Left project successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - user is the project owner"),
-            @ApiResponse(responseCode = "404", description = "Project not found or user not a member"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
+            @ApiResponse(responseCode = "404", ref = "NotFound"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<Void> leaveProject(
             @Parameter(description = "Project ID", required = true) @PathVariable Long projectId) {
@@ -245,8 +245,8 @@ public class ProjectController {
     @Operation(summary = "Get projects as member", description = "Retrieves all projects where the current user is a member but not owner")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Projects retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<Page<ProjectDto>> getProjectsWhereUserIsMember(Pageable pageable) {
         log.debug("Fetching projects where user is a member with pagination");

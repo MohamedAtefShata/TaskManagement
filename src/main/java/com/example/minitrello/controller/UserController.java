@@ -47,8 +47,8 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Profile retrieved successfully",
                     content = @Content(schema = @Schema(implementation = UserDto.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<UserDto> getCurrentUserProfile() {
         log.debug("Fetching current user profile");
@@ -68,9 +68,9 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Profile updated successfully",
                     content = @Content(schema = @Schema(implementation = UserDto.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<UserDto> updateCurrentUserProfile(@Valid @RequestBody UserUpdateDto updateDto) {
         log.info("Updating current user profile");
@@ -92,10 +92,10 @@ public class UserController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User retrieved successfully",
                     content = @Content(schema = @Schema(implementation = UserDto.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - requires admin role or be the user"),
-            @ApiResponse(responseCode = "404", description = "User not found"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
+            @ApiResponse(responseCode = "404", ref = "NotFound"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<UserDto> getUserById(
             @Parameter(description = "User ID", required = true) @PathVariable Long id) {
@@ -117,9 +117,9 @@ public class UserController {
     @Operation(summary = "Get all users", description = "Retrieves a paginated list of all users (admin only)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - requires admin role"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "403", ref = "Forbidden"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<Page<UserDto>> getAllUsers(Pageable pageable) {
         log.debug("Fetching all users with pagination");

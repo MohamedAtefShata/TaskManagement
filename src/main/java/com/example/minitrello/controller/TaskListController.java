@@ -47,10 +47,10 @@ public class TaskListController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Task list created successfully",
                     content = @Content(schema = @Schema(implementation = TaskListDto.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Project not found or no access"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "404", ref = "NotFound"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<TaskListDto> createTaskList(@Valid @RequestBody TaskListCreateDto createDto) {
         log.info("Creating new task list: {} for project: {}", createDto.getName(), createDto.getProjectId());
@@ -69,9 +69,9 @@ public class TaskListController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Task list retrieved successfully",
                     content = @Content(schema = @Schema(implementation = TaskListDto.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Task list not found or no access"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "404", ref = "NotFound"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<TaskListDto> getTaskListById(
             @Parameter(description = "Task list ID", required = true) @PathVariable Long taskListId) {
@@ -91,9 +91,9 @@ public class TaskListController {
     @Operation(summary = "Get task lists by project", description = "Retrieves all task lists within a project if the user has access")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Task lists retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Project not found or no access"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "404", ref = "NotFound"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<List<TaskListDto>> getTaskListsByProject(
             @Parameter(description = "Project ID", required = true) @PathVariable Long projectId) {
@@ -114,10 +114,10 @@ public class TaskListController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Task list updated successfully",
                     content = @Content(schema = @Schema(implementation = TaskListDto.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Task list not found or no access"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "400", ref = "BadRequest"),
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "404", ref = "NotFound"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<TaskListDto> updateTaskList(
             @Parameter(description = "Task list ID", required = true) @PathVariable Long taskListId,
@@ -137,9 +137,9 @@ public class TaskListController {
     @Operation(summary = "Delete task list", description = "Deletes a task list if the user has access")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Task list deleted successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized"),
-            @ApiResponse(responseCode = "404", description = "Task list not found or no access"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "401", ref = "Unauthorized"),
+            @ApiResponse(responseCode = "404", ref = "NotFound"),
+            @ApiResponse(responseCode = "500", ref = "ServerError")
     })
     public ResponseEntity<Void> deleteTaskList(
             @Parameter(description = "Task list ID", required = true) @PathVariable Long taskListId) {

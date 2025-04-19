@@ -5,10 +5,14 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
+import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.Map;
 
 /**
  * Configuration for OpenAPI documentation.
@@ -37,7 +41,9 @@ public class OpenApiConfig {
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
                                         .description("Enter JWT Bearer token in the format 'Bearer {token}'")
-                        ));
+                        )
+                        .responses(createStandardResponses())
+                );
     }
 
     /**
@@ -57,5 +63,20 @@ public class OpenApiConfig {
                 .license(new License()
                         .name("Apache 2.0")
                         .url("https://www.apache.org/licenses/LICENSE-2.0.html"));
+    }
+
+    /**
+     * Creates standard API responses for common HTTP status codes.
+     *
+     * @return Map of response names to ApiResponse objects
+     */
+    private Map<String, ApiResponse> createStandardResponses() {
+        return Map.of(
+                "BadRequest", new ApiResponse().description("Bad Request - Invalid input").content(new Content()),
+                "Unauthorized", new ApiResponse().description("Unauthorized - Authentication required").content(new Content()),
+                "Forbidden", new ApiResponse().description("Forbidden - Insufficient permissions").content(new Content()),
+                "NotFound", new ApiResponse().description("Not Found - Resource not found").content(new Content()),
+                "ServerError", new ApiResponse().description("Server Error - Internal server error").content(new Content())
+        );
     }
 }
