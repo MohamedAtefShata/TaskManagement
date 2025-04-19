@@ -3,6 +3,7 @@ package com.example.minitrello.service.interfaces;
 import com.example.minitrello.dto.tasklist.TaskListCreateDto;
 import com.example.minitrello.dto.tasklist.TaskListDto;
 import com.example.minitrello.dto.tasklist.TaskListUpdateDto;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,6 +11,7 @@ import java.util.Optional;
 /**
  * Service interface for managing task list-related operations.
  */
+@PreAuthorize("isAuthenticated()")
 public interface TaskListService {
 
     /**

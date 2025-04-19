@@ -5,12 +5,14 @@ import com.example.minitrello.dto.project.ProjectDto;
 import com.example.minitrello.dto.project.ProjectUpdateDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.Optional;
 
 /**
  * Service interface for managing project-related operations.
  */
+@PreAuthorize("isAuthenticated()")
 public interface ProjectService {
 
     /**

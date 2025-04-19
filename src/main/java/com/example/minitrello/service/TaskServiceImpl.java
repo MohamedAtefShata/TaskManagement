@@ -69,6 +69,11 @@ public class TaskServiceImpl implements TaskService {
                     .orElseThrow(() -> new ResourceNotFoundException("User", "id", createDto.getAssignedUserId()));
         }
 
+        // Check if assigned user has access to the project
+        if (!projectRepository.hasUserAccess(taskList.getProject().getId(), assignedUser.getId())) {
+            throw new AccessDeniedException("the assigned user does not have access to this project");
+        }
+
         // If position is not specified, put at the end
         if (createDto.getPosition() == null) {
             Integer maxPosition = taskRepository.findMaxPositionInTaskList(createDto.getTaskListId());
